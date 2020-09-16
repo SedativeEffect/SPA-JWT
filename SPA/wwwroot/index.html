@@ -1,0 +1,325 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>SPA page</title>
+</head>
+<body>
+    <div id="userInfo" style="display:none;">
+        <p>Вы вошли как : <span id="userName"></span></p>
+        <p>Ваша роль : <span id="roleName"></span></p>
+        <input type="button" value="Выйти" id="logOut" />
+    </div>
+    <div id="listUsers" style="display: none"></div>
+    <div id="registerForm">
+        <h3>Регистрация</h3>
+        <p><span id="ErrorRegister"></span></p>
+        <label>Введите логин</label><br />
+        <input type="text" id="registerLogin" /> <br /><br />
+        <label>Введите пароль</label><br />
+        <input type="password" id="registerPassword" /><br /><br />
+        <label>Введите пароль повторно</label><br />
+        <input type="password" id="registerconfirmPassword" /><br /><br />
+        <label>Введите имя</label><br />
+        <input type="text" id="registerName" /><br /><br />
+        <label>Введите email</label><br />
+        <input type="email" id="registerEmail" /><br /><br />
+        <input type="submit" id="submitRegister" value="Регистрация" />
+    </div>
+    <div id="createUserdiv" style="display: none">
+        <h3>Создать пользователя</h3>
+        <p><span id="ErrorCreate"></span></p>
+        <label>Введите логин</label><br />
+        <input type="text" id="createLogin" /> <br /><br />
+        <label>Введите пароль</label><br />
+        <input type="password" id="createPassword" /><br /><br />
+        <label>Введите пароль повторно</label><br />
+        <input type="password" id="createconfirmPassword" /><br /><br />
+        <label>Введите имя</label><br />
+        <input type="text" id="createName" /><br /><br />
+        <label>Введите email</label><br />
+        <input type="email" id="createEmail" /><br /><br />
+        <label>Введите роль( Admin = 1, User = 2, Customer = 4, Editor = 8, если необходимо несколько ролей складываем значения, например Admin,Customer = 5</label><br />
+        <input type="number" id="createRole" /><br /><br />
+        <input type="submit" id="submitCreate" value="СОЗДАТЬ" />
+    </div>
+    <div id="updateUserdiv" style="display: none">
+        <h3>Редактировать пользователя</h3>
+        <p><span id="ErrorUpdate"></span></p>
+        <label>Введите ID редактируемого пользователя</label><br />
+        <input type="number" id="updateId" /><br /><br />
+        <label>Введите логин</label><br />
+        <input type="text" id="updateLogin" /> <br /><br />
+        <label>Введите пароль</label><br />
+        <input type="password" id="updatePassword" /><br /><br />
+        <label>Введите имя</label><br />
+        <input type="text" id="updateName" /><br /><br />
+        <label>Введите email</label><br />
+        <input type="email" id="updateEmail" /><br /><br />
+        <label>Введите роль( Admin = 1, User = 2, Customer = 4, Editor = 8, если необходимо несколько ролей складываем значения, например Admin,Customer = 5</label><br />
+        <input type="number" id="updateRole" /><br /><br />
+        <input type="submit" id="submitUpdate" value="РЕДАКТИРОВАТЬ" />
+    </div>
+    <div id="loginForm">
+        <h3>Вход на сайт</h3>
+        <p><span id="ErrorLogin"></span></p>
+        <label>Введите логин</label><br />
+        <input type="text" id="loginLogin" /> <br /><br />
+        <label>Введите пароль</label><br />
+        <input type="password" id="passwordLogin" /><br /><br />
+        <input type="submit" id="submitLogin" value="Логин" />
+    </div>
+    <div id="getUsersdiv" style="display: none">
+        <input type="submit" id="getUsers" value="Список пользователей" />
+    </div>
+    <div id="createUserbutton" style="display: none">
+        <input type="submit" id="createUser" value="Создать пользователя" />
+    </div>
+    <div id="deleteUserdiv" style="display: none">
+        <input type="submit" id="deleteUser" value="Удалить пользователя" />
+    </div>
+    <div id="updateUserbutton" style="display: none">
+        <input type="submit" id="updateUser" value="Редактировать пользователя" />
+    </div>
+
+    <script>
+        var tokenKey = "accessToken";
+
+
+        async function getTokenAsync() {
+
+            var user = {
+                Login: document.getElementById("loginLogin").value,
+                Password: document.getElementById("passwordLogin").value
+            };
+            var serializedUser = JSON.stringify(user);
+
+
+            const response = await fetch("/account/login", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: serializedUser
+            });
+
+            const data = await response.json();
+
+
+            if (response.ok === true) {
+                document.getElementById("userName").innerText = data.username;
+                document.getElementById("roleName").innerText = data.role;
+                document.getElementById("userInfo").style.display = "block";
+                document.getElementById("loginForm").style.display = "none";
+                document.getElementById("registerForm").style.display = "none";
+                document.getElementById("deleteUserdiv").style.display = "block";
+                document.getElementById("getUsersdiv").style.display = "block";
+                document.getElementById("createUserbutton").style.display = "block";
+                document.getElementById("updateUserbutton").style.display = "block";
+                sessionStorage.setItem(tokenKey, data.access_token);
+                console.log(data.access_token);
+            }
+            else {
+                console.log("Error: ", response.status, data.errorText);
+                document.getElementById("ErrorLogin").innerText = data.errorText;
+            }
+        };
+        async function GetRegisterAsync() {
+            var user =
+            {
+                Login: document.getElementById("registerLogin").value,
+                Password: document.getElementById("registerPassword").value,
+                ConfirmPassword: document.getElementById("registerconfirmPassword").value,
+                Name: document.getElementById("registerName").value,
+                Email: document.getElementById("registerEmail").value
+            };
+            var serializedUser = JSON.stringify(user);
+            const response = await fetch("/account/register",
+                {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: serializedUser
+                });
+            const data = await response.json();
+            if (response.ok === true) {
+                alert(data.text);
+            }
+            else {
+                console.log("Error: ", response.status, data.errorText);
+                document.getElementById("ErrorRegister").innerText = data.errorText;
+            }
+        };
+        async function GetCreateAsync() {
+            const token = sessionStorage.getItem(tokenKey);
+            var user =
+            {
+                Login: document.getElementById("createLogin").value,
+                Password: document.getElementById("createPassword").value,
+                ConfirmPassword: document.getElementById("createconfirmPassword").value,
+                Name: document.getElementById("createName").value,
+                Email: document.getElementById("createEmail").value,
+                Role: document.getElementById("createRole").valueAsNumber
+            }
+            var serializedUser = JSON.stringify(user);
+            const response = await fetch("api/test/createuser",
+                {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: serializedUser
+                });
+            const data = await response.json();
+            if (response.ok === true) {
+                alert(data.text);
+            }
+            else {
+                console.log("Error: ", response.status, data.errorText);
+                alert(data.errorText);
+            }
+        };
+        async function GetUpdateAsync() {
+            const token = sessionStorage.getItem(tokenKey);
+            var user =
+            {
+                Id: document.getElementById("updateId").valueAsNumber,
+                Login: document.getElementById("updateLogin").value,
+                Password: document.getElementById("updatePassword").value,
+                Name: document.getElementById("updateName").value,
+                Email: document.getElementById("updateEmail").value,
+                Role: document.getElementById("updateRole").valueAsNumber
+            }
+            var serializedUser = JSON.stringify(user);
+            const response = await fetch("api/test/updateuser",
+                {
+                    method: "PUT",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + token
+                    },
+                    body: serializedUser
+                });
+            const data = await response.json();
+            if (response.ok === true) {
+                alert(data.text);
+            }
+            else {
+                console.log("Error: ", response.status, data.errorText);
+                alert(data.errorText);
+            }
+        };
+        async function getData(url) {
+            const token = sessionStorage.getItem(tokenKey);
+
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json",
+                    "Authorization": "Bearer " + token
+                }
+            });
+            if (response.ok === true) {
+                const data = await response.json();
+                let users = [];
+                users = JSON.parse(data);
+                document.getElementById("listUsers").style.display = "block";
+                document.getElementById("listUsers").innerHTML = '<ul start="0">';
+                users.forEach(user => {
+                    document.getElementById("listUsers").innerHTML +=`<li>Id: ${user.Id} Имя:<span style="color: #1a55cc"> ${user.Name}</span> Логин: ${user.Login}
+                    Email: ${user.Email} Роль: ${user.Role}</li>`;
+                });
+                document.getElementById("listUsers").innerHTML +='<ul>';
+            }
+            else
+                console.log("Status: ", response.status);
+        };
+        async function deleteUser(url, id) {
+            const token = sessionStorage.getItem(tokenKey);
+            const response = await fetch(url + "/" + id, {
+                method: "DELETE",
+                headers: {
+                    "Accept": "application/json",
+                    "Authorization": "Bearer " + token
+                }
+            });
+            const data = await response.json();
+            if (response.ok === true) {
+                alert(data.text);
+            }
+            else {
+                console.log("Status: ", response.status);
+                alert(data.errorText);
+            }
+        };
+
+
+        document.getElementById("submitLogin").addEventListener("click", e => {
+
+            e.preventDefault();
+            getTokenAsync();
+        });
+
+        document.getElementById("submitRegister").addEventListener("click", e => {
+
+            e.preventDefault();
+            GetRegisterAsync();
+        });
+
+
+        document.getElementById("logOut").addEventListener("click", e => {
+
+            e.preventDefault();
+            document.getElementById("userName").innerText = "";
+            document.getElementById("userInfo").style.display = "none";
+            document.getElementById("loginForm").style.display = "block";
+            document.getElementById("registerForm").style.display = "block";
+            document.getElementById("deleteUserdiv").style.display = "none";
+            document.getElementById("getUsersdiv").style.display = "none";
+            document.getElementById("createUserbutton").style.display = "none";
+            document.getElementById("createUserdiv").style.display = "none";
+            document.getElementById("updateUserbutton").style.display = "none";
+            document.getElementById("updateUserdiv").style.display = "none";
+            document.getElementById("listUsers").style.display = "none";
+            sessionStorage.removeItem(tokenKey);
+        });
+
+
+
+        document.getElementById("getUsers").addEventListener("click", e => {
+            e.preventDefault();
+            getData("/api/test/getusers");
+        });
+
+
+        document.getElementById("deleteUser").addEventListener("click", e => {
+            var id = prompt("Введите ID удаляемого пользователя");
+            e.preventDefault();
+            deleteUser("/api/test/deleteuser", id);
+        });
+
+        document.getElementById("createUserbutton").addEventListener("click", e => {
+            e.preventDefault();
+            document.getElementById("createUserdiv").style.display = "block";
+            document.getElementById("submitCreate").addEventListener("click", e => {
+                e.preventDefault();
+                GetCreateAsync();
+            });
+        });
+        document.getElementById("updateUserbutton").addEventListener("click", e => {
+            e.preventDefault();
+            document.getElementById("updateUserdiv").style.display = "block";
+            document.getElementById("submitUpdate").addEventListener("click", e => {
+                e.preventDefault();
+                GetUpdateAsync();
+            });
+        });
+    </script>
+</body>
+</html>
