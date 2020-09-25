@@ -3,9 +3,8 @@ using SPA.Models;
 
 namespace SPA.ViewModels
 {
-    public class UpdateModel
+    public class UserViewModel
     {
-        [Required(ErrorMessage = "Не указан ID")]
         public int Id { get; set; }
         [Required(ErrorMessage = "Не указан логин")]
         public string Login { get; set; }
@@ -14,6 +13,7 @@ namespace SPA.ViewModels
         [Required(ErrorMessage = "Не указан email")]
         public string Email { get; set; }
         [Required(ErrorMessage = "Не указан пароль")]
+        [DataType(DataType.Password)]
         public string Password { get; set; }
         [Required(ErrorMessage = "Не указана роль")]
         public Roles Role { get; set; }

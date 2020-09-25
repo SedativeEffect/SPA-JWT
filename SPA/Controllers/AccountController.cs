@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -20,14 +21,18 @@ namespace SPA.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register([FromBody] RegisterModel model)
+        public async Task<IActionResult> Register([FromBody] RegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
+                var config = new MapperConfiguration(cfg => cfg.CreateMap<RegisterViewModel, User>());
+                var mapper = new Mapper(config);
+
                 var user = await db.Users.FirstOrDefaultAsync(u => u.Login == model.Login);
                 if (user == null)
                 {
-                    user = new User() { Email = model.Email, Login = model.Login, Name = model.Name, Password = model.Password, Role = Roles.User };
+                    user = mapper.Map<RegisterViewModel, User>(model);
+                    user.Role = Roles.User;
                     db.Users.Add(user);
                     await db.SaveChangesAsync();
                     return Ok(new { text = "Пользователь зарегистрирован" });
@@ -38,7 +43,7 @@ namespace SPA.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login([FromBody] LoginModel model)
+        public async Task<IActionResult> Login([FromBody] LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -85,6 +90,6 @@ namespace SPA.Controllers
             }
             return null;
         }
-        
+
     }
 }

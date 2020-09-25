@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using SPA.Models;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using SPA.ViewModels;
 
@@ -19,16 +20,14 @@ namespace SPA.Controllers
             db = context;
         }
         [Authorize]
-        [Route("getusers")]
-        public async Task<IActionResult> GetUsers()
+        public async Task<IActionResult> Get()
         {
             string jsonUsers = JsonSerializer.Serialize(await db.Users.ToListAsync());
             return Json(jsonUsers);
         }
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        [Route("deleteuser/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id);
@@ -43,18 +42,19 @@ namespace SPA.Controllers
         }
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        [Route("createuser")]
-        public async Task<IActionResult> CreateUser([FromBody] CreateModel model)
+        public async Task<IActionResult> Post([FromBody] UserViewModel model)
         {
             if (ModelState.IsValid)
             {
+                var config = new MapperConfiguration(cfg => cfg.CreateMap<UserViewModel, User>());
+                var mapper = new Mapper(config);
                 var user = await db.Users.FirstOrDefaultAsync(u => u.Login == model.Login);
                 if (user == null)
                 {
-                    user = new User() { Email = model.Email, Login = model.Login, Name = model.Name, Password = model.Password, Role = model.Role };
+                    user = mapper.Map<UserViewModel, User>(model);
                     db.Users.Add(user);
                     await db.SaveChangesAsync();
-                    return Ok(new { text = "Пользователь создан" });
+                    return Ok(user);
                 }
                 return BadRequest(new { errorText = "Такой пользователь уже существует" });
             }
@@ -62,8 +62,7 @@ namespace SPA.Controllers
         }
         [HttpPut]
         [Authorize(Roles = "Admin")]
-        [Route("updateuser")]
-        public async Task<IActionResult> UpdateUser([FromBody] UpdateModel model)
+        public async Task<IActionResult> Put([FromBody] UserViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -78,7 +77,7 @@ namespace SPA.Controllers
                 user.Password = model.Password;
                 user.Role = model.Role;
                 await db.SaveChangesAsync();
-                return Ok(new { text = "Пользователь обновлен" });
+                return Ok(user);
             }
             return BadRequest(new { errorText = "Пользователь не найден" });
         }
