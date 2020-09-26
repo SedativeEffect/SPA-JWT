@@ -25,6 +25,19 @@ namespace SPA.Controllers
             string jsonUsers = JsonSerializer.Serialize(await db.Users.ToListAsync());
             return Json(jsonUsers);
         }
+        [Authorize]
+
+        [HttpGet("{id}", Name = "GetUser")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var user = await db.Users.FirstOrDefaultAsync(x => x.Id == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            string jsonUsers = JsonSerializer.Serialize(user);
+            return Json(jsonUsers);
+        }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
@@ -54,30 +67,29 @@ namespace SPA.Controllers
                     user = mapper.Map<UserViewModel, User>(model);
                     db.Users.Add(user);
                     await db.SaveChangesAsync();
-                    return Ok(user);
+                    return CreatedAtRoute("GetUser", new { id = user.Id }, user);
                 }
                 return BadRequest(new { errorText = "Такой пользователь уже существует" });
             }
             return BadRequest(new { errorText = "Не в том формате указаны данные" });
         }
-        [HttpPut]
+        [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Put([FromBody] UserViewModel model)
+        public async Task<IActionResult> Put(int id, [FromBody] UserViewModel model)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || model.Id != id)
             {
                 return BadRequest(new { errorText = "Не валидная модель" });
             }
             var user = await db.Users.Where(u => u.Id == model.Id).FirstOrDefaultAsync();
             if (user != null)
             {
-                user.Name = model.Name;
-                user.Login = model.Login;
-                user.Email = model.Email;
-                user.Password = model.Password;
-                user.Role = model.Role;
+                var config = new MapperConfiguration(cfg => cfg.CreateMap<UserViewModel, User>());
+                var mapper = new Mapper(config);
+                mapper.Map(model, user);
+                db.Entry(user).State = EntityState.Modified;
                 await db.SaveChangesAsync();
-                return Ok(user);
+                return CreatedAtRoute("GetUser", new { id = user.Id }, user);
             }
             return BadRequest(new { errorText = "Пользователь не найден" });
         }
